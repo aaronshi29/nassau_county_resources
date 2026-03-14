@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Nassau County Living Resources Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+
+<style>
+body { margin:0; font-family:Arial, sans-serif; }
+#map { position:absolute; top:0; bottom:0; width:100%; }
+#welcome {
+ position:absolute;
+ top:20px;
+ left:20px;
+ background:white;
+ padding:15px;
+ max-width:300px;
+ border-radius:8px;
+ box-shadow:0 2px 8px rgba(0,0,0,0.2);
+ z-index:1;
+}
+</style>
+</head>
+
+<body>
+
+<div id="welcome">
+<h3>Nassau County Resource Map</h3>
+<p>This map shows shelters, food assistance, medical services, and legal services available in Nassau County.</p>
+<p><b>Disclaimer:</b> Information may change. Please contact the organization directly to confirm details.</p>
+<p>If you know a resource that should be added or updated, please contribute to the dataset.</p>
+<button onclick="document.getElementById('welcome').style.display='none'">Close</button>
+</div>
+
+<div id="map"></div>
+
+<script>
+
+const map = new maplibregl.Map({
+ container: 'map',
+ style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+ center: [-73.55, 40.74],
+ zoom: 10
+});
+
+map.addControl(new maplibregl.NavigationControl());
+
+fetch('./resources_fixed.geojson')
+.then(response => response.json())
+.then(data => {
+
+ data.features.forEach(feature => {
+
+   const coords = feature.geometry.coordinates;
+   const props = feature.properties || {};
+
+   const popupHTML = `
+     <b>${props.name || "Resource"}</b><br>
+     ${props.category || ""}<br>
+     ${props.address || ""}<br>
+     ${props.hours || ""}<br>
+     ${props.description || ""}
+   `;
+
+   new maplibregl.Marker()
+     .setLngLat(coords)
+     .setPopup(new maplibregl.Popup().setHTML(popupHTML))
+     .addTo(map);
+
+ });
+
+})
+.catch(err => {
+ console.error("GeoJSON failed to load:", err);
+ alert("The map could not load resources_fixed.geojson. Make sure it is in the same folder as index_fixed.html.");
+});
+
+</script>
+
+</body>
+</html>
